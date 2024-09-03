@@ -1,25 +1,24 @@
-SELECT 
-    oohv.ORG_id "ORG", 
-    oohv.order_number "Ordem",
-    oohv.ORDER_TYPE "Tipo da Ordem",
-    oola.LINE_NUMBER "Linha Ordem", 
-    oola.ORDERED_ITEM "Item",
-    oola.ORDERED_QUANTITY "Quantidade", 
-    oola.ORDER_QUANTITY_UOM "UDM",
-    oola.PRICING_QUANTITY "Valor Total Linha",
-    rcta.INVOICE_CURRENCY_CODE "Moeda",
-    oohv.SOLD_TO "CLIENTE",
-    rbsa.NAME "NOTA FISCAL ORIGEN",
-    oohv.*
-FROM    
-    apps.OE_ORDER_HEADERS_V oohv,
-    apps.OE_ORDER_LINES_all oola,
-    apps.ra_customer_trx_all rcta,
-    apps.ra_customer_trx_lines_all rctla,
-    apps.ra_batch_sources_all rbsa
-WHERE
-    oohv.HEADER_ID = oola.HEADER_ID
-    AND oohv.HEADER_ID = rcta.HEADER_ID
-    AND rcta.customer_trx_id = rctla.customer_trx_id
-    AND rcta.BATCH_SOURCE_ID = rbsa.BATCH_SOURCE_ID
-    AND oohv.ORDER_TYPE LIKE '%RMA%';
+select  
+        oohv.ORG_id "ORG", 
+        oohv.order_number "Ordem",
+        oohv.ORDER_TYPE "Tipo da Ordem",
+        oola.LINE_NUMBER "Linha Ordem", 
+        oola.ORDERED_ITEM "Item",
+        oola.ORDERED_QUANTITY "Quantidade", 
+        oola.ORDER_QUANTITY_UOM "UDM",
+        oola.PRICING_QUANTITY "Valor Total Linha",
+        rcta.INVOICE_CURRENCY_CODE "Moeda",
+        oohv.SOLD_TO "CLIENTE",
+        rbsa.NAME "NOTA FISCAL ORIGEN",
+        oohv.*
+from    apps.OE_ORDER_HEADERS_V oohv,
+        apps.OE_ORDER_LINES_all oola,
+         apps.ra_batch_sources_all rbsa,
+        apps.ra_customer_trx_all rcta,
+        apps.ra_customer_trx_lines_all rctla     
+
+where   oohv.ORDER_TYPE LIKE '%RMA%' AND
+oohv.HEADER_ID = oola.HEADER_ID and
+        oohv.ORDER_NUMBER = rcta.INTERFACE_HEADER_ATTRIBUTE1 AND 
+        rcta.BATCH_SOURCE_ID = rbsa.BATCH_SOURCE_ID and
+        rcta.customer_trx_id = rctla.customer_trx_id 
