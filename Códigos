@@ -87,6 +87,158 @@ if (isDevelopment) {
     })
   }
 }
+
+
+{
+  "name": "most-used-words",
+  "title": "Most Used Words",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "serve": "vue-cli-service serve",
+    "build": "vue-cli-service build",
+    "lint": "vue-cli-service lint",
+    "electron:build": "vue-cli-service electron:build",
+    "electron:serve": "vue-cli-service electron:serve",
+    "postinstall": "electron-builder install-app-deps"
+  },
+  "main": "background.js",
+  "dependencies": {
+    "@mdi/font": "5.9.55",
+    "core-js": "^3.9.1",
+    "roboto-fontface": "^0.10.0",
+    "vue": "^3.2.47",
+    "vuetify": "^3.0.0",
+    "webfontloader": "^1.6.28",
+    "electron-reload": "^2.0.0"  // Adicionando electron-reload
+  },
+  "devDependencies": {
+    "@babel/core": "^7.21.5",
+    "@babel/eslint-parser": "^7.21.5",
+    "@vue/cli-plugin-babel": "~5.0.8",
+    "@vue/cli-plugin-eslint": "~5.0.8",
+    "@vue/cli-service": "~5.0.8",
+    "electron": "^13.6.9",
+    "electron-devtools-installer": "^3.2.0",
+    "eslint": "^7.32.0",
+    "eslint-plugin-vue": "^8.7.1",
+    "vue-cli-plugin-electron-builder": "~2.1.1",
+    "vue-cli-plugin-vuetify": "~2.5.8",
+    "webpack-plugin-vuetify": "^2.0.0-alpha.0"
+  },
+  "eslintConfig": {
+    "root": true,
+    "env": {
+      "node": true
+    },
+    "extends": [
+      "plugin:vue/vue3-essential",
+      "eslint:recommended"
+    ],
+    "parserOptions": {
+      "parser": "@babel/eslint-parser"
+    },
+    "rules": {}
+  },
+  "browserslist": [
+    "> 1%",
+    "last 2 versions",
+    "not dead",
+    "not ie 11"
+  ]
+}
+
+
+----------
+'use strict'
+
+import { app, protocol, BrowserWindow } from 'electron'
+import { createProtocol } from 'vue-cli-plugin-electron-builder/lib'
+import installExtension, { VUEJS3_DEVTOOLS } from 'electron-devtools-installer'
+const isDevelopment = process.env.NODE_ENV !== 'production'
+
+// Reload da aplicação ao detectar alterações no código
+if (isDevelopment) {
+  // Adiciona electron-reload para recarregar sem fechar a janela
+  try {
+    require('electron-reload')(__dirname, {
+      electron: require(`${__dirname}/../node_modules/electron`)
+    });
+  } catch (err) {
+    console.error('Falha ao configurar electron-reload:', err);
+  }
+}
+
+// Scheme must be registered before the app is ready
+protocol.registerSchemesAsPrivileged([
+  { scheme: 'app', privileges: { secure: true, standard: true } }
+])
+
+async function createWindow() {
+  // Create the browser window.
+  const win = new BrowserWindow({
+    width: 800,
+    height: 600,
+    webPreferences: {
+      // Use pluginOptions.nodeIntegration, leave this alone
+      nodeIntegration: process.env.ELECTRON_NODE_INTEGRATION,
+      contextIsolation: !process.env.ELECTRON_NODE_INTEGRATION,
+      enableRemoteModule: true
+    }
+  })
+
+  if (process.env.WEBPACK_DEV_SERVER_URL) {
+    // Load the url of the dev server if in development mode
+    await win.loadURL(process.env.WEBPACK_DEV_SERVER_URL)
+    if (!process.env.IS_TEST) win.webContents.openDevTools()
+  } else {
+    createProtocol('app')
+    // Load the index.html when not in development
+    win.loadURL('app://./index.html')
+  }
+
+  // Definir título com base no package.json
+  const { title } = require("../package.json")
+  win.setTitle(title)
+}
+
+// Quit when all windows are closed.
+app.on('window-all-closed', () => {
+  if (process.platform !== 'darwin') {
+    app.quit()
+  }
+})
+
+app.on('activate', () => {
+  if (BrowserWindow.getAllWindows().length === 0) createWindow()
+})
+
+// This method will be called when Electron has finished initialization
+app.on('ready', async () => {
+  if (isDevelopment && !process.env.IS_TEST) {
+    try {
+      await installExtension(VUEJS3_DEVTOOLS)
+    } catch (e) {
+      console.error('Vue Devtools failed to install:', e.toString())
+    }
+  }
+  createWindow()
+})
+
+// Exit cleanly on request from parent process in development mode.
+if (isDevelopment) {
+  if (process.platform === 'win32') {
+    process.on('message', (data) => {
+      if (data === 'graceful-exit') {
+        app.quit()
+      }
+    })
+  } else {
+    process.on('SIGTERM', () => {
+      app.quit()
+    })
+  }
+}
 -----------
 'use strict'
 
